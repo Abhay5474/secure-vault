@@ -1,0 +1,21 @@
+# --- Java / Backend ---
+secure-vault/target/
+secure-vault/*.log
+secure-vault/.mvn/
+secure-vault/mvnw
+secure-vault/mvnw.cmd
+secure-vault/.idea/
+secure-vault/*.iml
+secure-vault/help.md
+
+# --- Node / React ---
+secure-vault-ui/node_modules/
+secure-vault-ui/dist/
+secure-vault-ui/.env
+secure-vault-ui/.DS_Store
+secure-vault-ui/coverage/
+
+# --- IDEs ---
+.idea/
+.vscode/
+*.swp

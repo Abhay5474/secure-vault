@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: secure-vault
+
+  # Database Configuration
+  datasource:
+    # This URL creates the DB 'sentinel_db' automatically if it doesn't exist
+    url: jdbc:mysql://localhost:3306/sentinel_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: ${DB_PASSWORD}  # <--- CHANGE THIS TO YOUR ACTUAL PASSWORD
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA (The Translator) Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update  # Automatically creates tables from Java code
+    show-sql: true      # Shows the SQL queries in the console
+    properties:
+      hibernate:
+        format_sql: true # Makes SQL readable in logs
+        dialect: org.hibernate.dialect.MySQLDialect
