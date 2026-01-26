@@ -19,3 +19,9 @@ spring:
       hibernate:
         format_sql: true # Makes SQL readable in logs
         dialect: org.hibernate.dialect.MySQLDialect
+
+  # --- NEW: INCREASE FILE UPLOAD LIMITS ---
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB

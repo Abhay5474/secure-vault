@@ -18,7 +18,8 @@ public class FileShare {
     private SecureFile file;
 
     // Who is it shared WITH?
+    // RENAMED from 'sharedTo' to 'sharedWith' to match Repository & Service
     @ManyToOne
     @JoinColumn(name = "shared_to_user_id", nullable = false)
-    private User sharedTo;
+    private User sharedWith;
 }

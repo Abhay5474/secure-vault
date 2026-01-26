@@ -1,16 +1,20 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard'; // <--- Import this!
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import DecryptPage from './pages/DecryptPage'; // <--- Import this
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" />} />
-      <Route path="/login" element={<Login />} />
-      
-      {/* Update this line to use the Component */}
-      <Route path="/dashboard" element={<Dashboard />} />
-    </Routes>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/decrypt" element={<DecryptPage />} /> {/* <--- New Route */}
+        <Route path="/" element={<Navigate to="/login" />} />
+      </Routes>
+    </Router>
   );
 }
 

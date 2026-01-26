@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Fix for React-PDF visibility */
+.react-pdf__Page__canvas {
+    margin: 0 auto;
+    width: 100% !important;
+    height: auto !important;
+}
+
+.react-pdf__Page__textContent {
+    display: none !important; /* Hide selectable text for security */
+}
+
+.react-pdf__Page__annotations {
+    display: none !important; /* Hide links for security */
+}
