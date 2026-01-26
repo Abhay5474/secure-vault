@@ -3,16 +3,21 @@ import axios from 'axios';
 import { Shield, Lock, FileKey, ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SecurePDFViewer from './SecurePDFViewer';
-import SecureVideoPlayer from './SecureVideoPlayer'; // 🟢 Import the new player
+import SecureVideoPlayer from './SecureVideoPlayer';
+import SecureAudioPlayer from './SecureAudioPlayer'; // 🟢 Import Audio Player
 
 const DecryptPage = () => {
   // PDF State
   const [viewFile, setViewFile] = useState(null);
   const [viewFileName, setViewFileName] = useState('');
   
-  // 🟢 Video State
+  // Video State
   const [videoFile, setVideoFile] = useState(null);
   const [videoName, setVideoName] = useState('');
+
+  // 🟢 Audio State
+  const [audioFile, setAudioFile] = useState(null);
+  const [audioName, setAudioName] = useState('');
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false); 
@@ -55,7 +60,7 @@ const DecryptPage = () => {
       });
 
       // 🟢 INTELLIGENT ROUTING
-      const mimeType = response.data.type; // e.g. "video/mp4" or "application/pdf"
+      const mimeType = response.data.type; // e.g. "video/mp4", "audio/mpeg", "application/pdf"
       
       // Create the Decrypted Blob URL
       const fileUrl = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }));
@@ -64,6 +69,10 @@ const DecryptPage = () => {
         // IT IS A VIDEO -> Open Video Player
         setVideoName(fileName);
         setVideoFile(fileUrl);
+      } else if (mimeType.startsWith('audio/')) {
+        // 🟢 IT IS AUDIO -> Open Audio Player
+        setAudioName(fileName);
+        setAudioFile(fileUrl);
       } else {
         // IT IS A PDF (or default) -> Open PDF Viewer
         setViewFileName(fileName);
@@ -141,7 +150,7 @@ const DecryptPage = () => {
 
       </div>
 
-      {/* 🟢 Render Video Player if Video */}
+      {/* Render Video Player if Video */}
       <SecureVideoPlayer 
         isOpen={!!videoFile}
         onClose={() => {
@@ -152,7 +161,18 @@ const DecryptPage = () => {
         fileName={videoName}
       />
 
-      {/* 🟢 Render PDF Viewer if PDF */}
+      {/* 🟢 Render Audio Player if Audio */}
+      <SecureAudioPlayer 
+        isOpen={!!audioFile}
+        onClose={() => {
+          setAudioFile(null);
+          setAudioName('');
+        }}
+        fileUrl={audioFile}
+        fileName={audioName}
+      />
+
+      {/* Render PDF Viewer if PDF */}
       <SecurePDFViewer 
         isOpen={!!viewFile}
         onClose={() => {

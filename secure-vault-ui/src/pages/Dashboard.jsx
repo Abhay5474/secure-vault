@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Shield, FileText, LogOut, Upload, Share2, Eye, Lock, Trash2, Film } from 'lucide-react'; // 🟢 Added Film Icon
+import { Shield, FileText, LogOut, Upload, Share2, Eye, Lock, Trash2, Film, Music } from 'lucide-react'; // 🟢 Added Music Icon
 import UploadModal from './UploadModal';
 import SecurePDFViewer from './SecurePDFViewer';
-import SecureVideoPlayer from './SecureVideoPlayer'; // 🟢 Added Video Player Import
+import SecureVideoPlayer from './SecureVideoPlayer';
+import SecureAudioPlayer from './SecureAudioPlayer'; // 🟢 Import Audio Player
 import ShareModal from './ShareModal';
 
 const Dashboard = () => {
@@ -13,16 +14,20 @@ const Dashboard = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [activeFile, setActiveFile] = useState({ id: null, name: '' });
   
-  // 🟢 NEW: Tab State
-  const [activeTab, setActiveTab] = useState('pdf'); // 'pdf' or 'video'
+  // Tab State
+  const [activeTab, setActiveTab] = useState('pdf'); // 'pdf', 'video', or 'audio'
 
   // Viewer States
   const [viewFile, setViewFile] = useState(null);
   const [viewFileName, setViewFileName] = useState('');
   
-  // 🟢 NEW: Video Player States
+  // Video Player States
   const [videoFile, setVideoFile] = useState(null);
   const [videoName, setVideoName] = useState('');
+
+  // 🟢 Audio Player States
+  const [audioFile, setAudioFile] = useState(null);
+  const [audioName, setAudioName] = useState('');
   
   const navigate = useNavigate();
 
@@ -61,7 +66,7 @@ const Dashboard = () => {
 
   // --- ACTIONS ---
 
-  // A. VIEW (Smart Decrypt: Handles PDF & Video)
+  // A. VIEW (Smart Decrypt: Handles PDF, Video & Audio)
   const handleView = async (fileId, fileName) => {
     const token = localStorage.getItem('token');
     try {
@@ -70,7 +75,7 @@ const Dashboard = () => {
         responseType: 'blob' 
       });
 
-      // 🟢 SMART DETECTION: Check MIME type from response
+      // SMART DETECTION: Check MIME type from response
       const mimeType = response.data.type; 
       const fileUrl = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }));
 
@@ -78,6 +83,10 @@ const Dashboard = () => {
         // It's a video -> Open Video Player
         setVideoName(fileName);
         setVideoFile(fileUrl);
+      } else if (mimeType.startsWith('audio/')) {
+        // 🟢 It's audio -> Open Audio Player
+        setAudioName(fileName);
+        setAudioFile(fileUrl);
       } else {
         // It's a PDF -> Open PDF Viewer
         setViewFileName(fileName);
@@ -139,6 +148,13 @@ const Dashboard = () => {
     }
   };
 
+  // Helper to get active icon
+  const getActiveIcon = () => {
+    if (activeTab === 'pdf') return <FileText className="w-8 h-8 text-blue-400" />;
+    if (activeTab === 'video') return <Film className="w-8 h-8 text-purple-400" />;
+    if (activeTab === 'audio') return <Music className="w-8 h-8 text-pink-400" />; // 🟢
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6 font-sans">
       {/* Navbar */}
@@ -170,7 +186,7 @@ const Dashboard = () => {
               My Encrypted Vault
             </h2>
             
-            {/* 🟢 TABS: Toggle between Documents and Videos */}
+            {/* TABS: Toggle between Documents, Videos, Audio */}
             <div className="flex bg-gray-800 p-1 rounded-lg inline-flex border border-gray-700">
               <button 
                 onClick={() => setActiveTab('pdf')}
@@ -183,6 +199,13 @@ const Dashboard = () => {
                 className={`flex items-center gap-2 px-6 py-2 rounded-md text-sm font-medium transition ${activeTab === 'video' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
               >
                 <Film className="w-4 h-4" /> Videos
+              </button>
+              {/* 🟢 NEW AUDIO TAB */}
+              <button 
+                onClick={() => setActiveTab('audio')}
+                className={`flex items-center gap-2 px-6 py-2 rounded-md text-sm font-medium transition ${activeTab === 'audio' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+              >
+                <Music className="w-4 h-4" /> Audio
               </button>
             </div>
           </div>
@@ -209,19 +232,19 @@ const Dashboard = () => {
         {/* File Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {files
-            // 🟢 FILTER LOGIC: Only show files for the active tab
-            .filter(f => activeTab === 'pdf' ? f.fileType?.includes('pdf') : f.fileType?.includes('video'))
+            // 🟢 FILTER LOGIC: Shows only files for the active tab
+            .filter(f => {
+                if (activeTab === 'pdf') return f.fileType?.includes('pdf');
+                if (activeTab === 'video') return f.fileType?.includes('video');
+                if (activeTab === 'audio') return f.fileType?.includes('audio');
+                return false;
+            })
             .map((file) => (
               <div key={file.id} className="bg-gray-800 rounded-xl border border-gray-700 hover:border-blue-500/50 transition duration-300 group overflow-hidden shadow-xl">
                 
                 <div className="p-5 pb-0 flex items-start justify-between">
                   <div className="p-3 bg-gray-900 rounded-lg border border-gray-700">
-                    {/* 🟢 DYNAMIC ICON */}
-                    {activeTab === 'pdf' ? (
-                       <FileText className="w-8 h-8 text-blue-400" />
-                    ) : (
-                       <Film className="w-8 h-8 text-purple-400" />
-                    )}
+                    {getActiveIcon()}
                   </div>
                   <div className="text-xs font-mono text-gray-500 bg-gray-900 px-2 py-1 rounded border border-gray-700">
                     ID: {file.id.toString().padStart(4, '0')}
@@ -239,10 +262,10 @@ const Dashboard = () => {
                         <button 
                             onClick={() => handleView(file.id, file.fileName)}
                             className="flex-1 flex items-center justify-center gap-2 p-2 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg transition border border-blue-500/30" 
-                            title={activeTab === 'pdf' ? "Decrypt & View" : "Decrypt & Play"}
+                            title="Decrypt & Play"
                         >
                             <Eye className="w-4 h-4" />
-                            {/* 🟢 DYNAMIC TEXT */}
+                            {/* DYNAMIC TEXT */}
                             <span className="text-xs font-bold">{activeTab === 'pdf' ? 'VIEW' : 'PLAY'}</span>
                         </button>
 
@@ -287,11 +310,16 @@ const Dashboard = () => {
             ))
           }
 
-          {/* 🟢 EMPTY STATE: Handles empty Documents OR empty Videos */}
-          {files.filter(f => activeTab === 'pdf' ? f.fileType?.includes('pdf') : f.fileType?.includes('video')).length === 0 && (
+          {/* EMPTY STATE */}
+          {files.filter(f => {
+              if (activeTab === 'pdf') return f.fileType?.includes('pdf');
+              if (activeTab === 'video') return f.fileType?.includes('video');
+              if (activeTab === 'audio') return f.fileType?.includes('audio');
+              return false;
+          }).length === 0 && (
             <div className="col-span-full text-center py-24 text-gray-500 border-2 border-dashed border-gray-800 rounded-xl">
-              {activeTab === 'pdf' ? <Lock className="w-16 h-16 mx-auto mb-4 opacity-20" /> : <Film className="w-16 h-16 mx-auto mb-4 opacity-20" />}
-              <p className="text-lg">No {activeTab === 'pdf' ? 'Documents' : 'Videos'} Found</p>
+              <Lock className="w-16 h-16 mx-auto mb-4 opacity-20" />
+              <p className="text-lg uppercase">No {activeTab} Files Found</p>
               <p className="text-sm opacity-60">Upload a file to get started</p>
             </div>
           )}
@@ -308,7 +336,7 @@ const Dashboard = () => {
         }} 
       />
       
-      {/* 🟢 NEW: Video Player Modal */}
+      {/* Video Player Modal */}
       <SecureVideoPlayer 
         isOpen={!!videoFile}
         onClose={() => {
@@ -317,6 +345,17 @@ const Dashboard = () => {
         }}
         fileUrl={videoFile}
         fileName={videoName}
+      />
+
+      {/* 🟢 NEW: Audio Player Modal */}
+      <SecureAudioPlayer 
+        isOpen={!!audioFile}
+        onClose={() => {
+            setAudioFile(null);
+            setAudioName('');
+        }}
+        fileUrl={audioFile}
+        fileName={audioName}
       />
       
       {/* Existing PDF Viewer */}

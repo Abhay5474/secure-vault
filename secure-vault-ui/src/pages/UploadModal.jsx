@@ -59,7 +59,7 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
           <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 flex flex-col items-center justify-center mb-6 hover:border-blue-500 transition-colors cursor-pointer relative">
             <input 
               type="file" 
-              accept=".pdf,.mp4,.mkv,.avi" // 🟢 UPDATED: Accepts Videos & PDFs
+              accept=".pdf,.mp4,.mkv,.avi,.mp3,.wav" // 🟢 UPDATED: Accepts Videos & PDFs & audio
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               onChange={(e) => setFile(e.target.files[0])}
             />
