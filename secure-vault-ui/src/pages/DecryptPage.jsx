@@ -3,10 +3,17 @@ import axios from 'axios';
 import { Shield, Lock, FileKey, ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SecurePDFViewer from './SecurePDFViewer';
+import SecureVideoPlayer from './SecureVideoPlayer'; // 🟢 Import the new player
 
 const DecryptPage = () => {
+  // PDF State
   const [viewFile, setViewFile] = useState(null);
   const [viewFileName, setViewFileName] = useState('');
+  
+  // 🟢 Video State
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoName, setVideoName] = useState('');
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false); 
   const navigate = useNavigate();
@@ -17,15 +24,12 @@ const DecryptPage = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Check extension
     if (!file.name.endsWith('.sntl')) {
       setError("Invalid file! You must upload a .sntl token file.");
       return;
     }
 
-    // 🛑 ROBUST ID EXTRACTION
-    // We look for "_id_" followed by digits ANYWHERE in the filename.
-    // This handles "doc_id_15.sntl" AND "doc_id_15 (1).sntl"
+    // Robust ID Extraction (Handles "(1)" duplicates)
     const match = file.name.match(/_id_(\d+)/);
     
     if (!match) {
@@ -33,15 +37,13 @@ const DecryptPage = () => {
       return;
     }
 
-    const fileId = match[1]; // We found the ID! (e.g., "15")
-    
-    // Clean up name for display
+    const fileId = match[1]; 
     const originalName = file.name.split('_id_')[0];
 
-    // 3. Attempt to View (Decrypt)
     await attemptDecryption(fileId, originalName);
   };
 
+  // 2. The Smart Decryption Logic
   const attemptDecryption = async (fileId, fileName) => {
     const token = localStorage.getItem('token');
     setLoading(true); 
@@ -52,9 +54,21 @@ const DecryptPage = () => {
         responseType: 'blob' 
       });
 
-      const fileUrl = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-      setViewFileName(fileName);
-      setViewFile(fileUrl);
+      // 🟢 INTELLIGENT ROUTING
+      const mimeType = response.data.type; // e.g. "video/mp4" or "application/pdf"
+      
+      // Create the Decrypted Blob URL
+      const fileUrl = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }));
+
+      if (mimeType.startsWith('video/')) {
+        // IT IS A VIDEO -> Open Video Player
+        setVideoName(fileName);
+        setVideoFile(fileUrl);
+      } else {
+        // IT IS A PDF (or default) -> Open PDF Viewer
+        setViewFileName(fileName);
+        setViewFile(fileUrl);
+      }
 
     } catch (err) {
       console.error(err);
@@ -70,6 +84,7 @@ const DecryptPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6 font-sans flex flex-col">
+      
       {/* Navbar */}
       <nav className="flex justify-between items-center mb-10 border-b border-gray-700 pb-4">
         <div className="flex items-center gap-3">
@@ -86,6 +101,7 @@ const DecryptPage = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center">
+        
         <div className="w-full max-w-xl bg-gray-800 p-10 rounded-2xl border-2 border-dashed border-gray-600 hover:border-green-500 transition-colors text-center relative group">
           
           <input 
@@ -115,14 +131,28 @@ const DecryptPage = () => {
           </div>
         </div>
 
+        {/* Error Message */}
         {error && (
           <div className="mt-8 bg-red-500/10 border border-red-500 text-red-400 px-6 py-4 rounded-xl flex items-center gap-3 animate-bounce-short">
             <Lock className="w-5 h-5" />
             <span className="font-semibold">{error}</span>
           </div>
         )}
+
       </div>
 
+      {/* 🟢 Render Video Player if Video */}
+      <SecureVideoPlayer 
+        isOpen={!!videoFile}
+        onClose={() => {
+          setVideoFile(null);
+          setVideoName('');
+        }}
+        fileUrl={videoFile}
+        fileName={videoName}
+      />
+
+      {/* 🟢 Render PDF Viewer if PDF */}
       <SecurePDFViewer 
         isOpen={!!viewFile}
         onClose={() => {
