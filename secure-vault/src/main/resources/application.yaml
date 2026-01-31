@@ -4,24 +4,41 @@ spring:
 
   # Database Configuration
   datasource:
-    # This URL creates the DB 'sentinel_db' automatically if it doesn't exist
     url: jdbc:mysql://localhost:3306/sentinel_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: ${DB_PASSWORD}  # <--- CHANGE THIS TO YOUR ACTUAL PASSWORD
+    password: ${DB_PASSWORD}  # Reminds you to set this Env Variable too
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-  # JPA (The Translator) Configuration
+  # JPA Configuration
   jpa:
     hibernate:
-      ddl-auto: update  # Automatically creates tables from Java code
-    show-sql: true      # Shows the SQL queries in the console
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
-        format_sql: true # Makes SQL readable in logs
+        format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
-  # --- NEW: INCREASE FILE UPLOAD LIMITS ---
+  # File Upload Limits
   servlet:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
+
+  # --- NEW: EMAIL CONFIGURATION (Indented under 'spring') ---
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}  # Reads from Env Variable
+    password: ${MAIL_PASSWORD}  # Reads from Env Variable
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# --- NEW: FRONTEND URL (Root level, same indentation as 'spring') ---
+app:
+  frontend:
+    url: ${FRONTEND_URL}  # Reads from Env Variable

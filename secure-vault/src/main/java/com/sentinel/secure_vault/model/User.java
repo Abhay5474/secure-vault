@@ -13,6 +13,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // 5. Auto-Increment (1, 2, 3...)
     private Long id;
 
+    private String resetToken;
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
+
     @Column(unique = true, nullable = false) // 6. No duplicates allowed, cannot be empty
     private String email;
 

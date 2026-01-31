@@ -84,6 +84,15 @@ const Login = () => {
           >
             Unlock Vault
           </button>
+          <div className="flex justify-end mb-4">
+  <button 
+    type="button"
+    onClick={() => navigate('/forgot-password')}
+    className="text-sm text-blue-400 hover:text-blue-300 hover:underline"
+  >
+    Forgot Password?
+  </button>
+</div>
         </form>
 
         <div className="mt-6 text-center text-gray-400 text-sm">

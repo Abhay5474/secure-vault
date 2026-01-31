@@ -15,6 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // "Find a User by their Email"
     // Optional<?> means: "It might return a User, or it might be empty (null safe)"
     Optional<User> findByEmail(String email);
-
+    Optional<User> findByResetToken(String resetToken);
     // Spring sees "findByEmail" -> translates to "SELECT * FROM users WHERE email = ?"
 }
