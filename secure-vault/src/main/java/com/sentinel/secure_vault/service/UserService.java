@@ -73,6 +73,11 @@ public class UserService {
         String resetLink = frontendUrl + "/reset-password?token=" + token;
 
         SimpleMailMessage message = new SimpleMailMessage();
+
+        // ⚡ CRITICAL FIX: Explicitly set the FROM address
+        // This MUST match the email you verified in Brevo (Senders & IP)
+        message.setFrom("moviesera851@gmail.com");
+
         message.setTo(email);
         message.setSubject("Secure Vault - Password Reset");
         message.setText("Click the link below to reset your password:\n\n" + resetLink);

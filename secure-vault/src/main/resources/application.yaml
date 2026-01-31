@@ -25,22 +25,22 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
 
-  # --- EMAIL CONFIGURATION (Updated for Render/Cloud) ---
+  # --- EMAIL CONFIGURATION (Switched to Brevo for Render Port 2525) ---
   mail:
-    host: smtp.gmail.com
-    port: 465                 # Changed to SSL Port (Fixes Timeout)
+    host: smtp-relay.brevo.com
+    port: 2525                # Render keeps this port open!
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
-    protocol: smtps           # Changed to secure SMTP
+    protocol: smtp            # Standard SMTP (upgrades via STARTTLS)
     properties:
       mail:
         smtp:
           auth: true
-          ssl:
-            enable: true      # Forces SSL connection immediately
-            trust: smtp.gmail.com
           starttls:
-            enable: false     # Disable StartTLS because we are using SSL
+            enable: true      # Required for Port 587/2525
+            required: true
+          ssl:
+            enable: false     # Disable implicit SSL (we use STARTTLS instead)
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
