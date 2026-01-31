@@ -52,13 +52,13 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 1. Allow the React Frontend
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", frontendUrl));
+        configuration.setAllowedOrigins(List.of("*"));
 
         // 2. Allow specific methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
         // 3. Allow all headers (Authorization, Content-Type, etc.)
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(List.of("*"));
 
         // 4. Allow credentials (cookies/tokens)
         configuration.setAllowCredentials(true);
