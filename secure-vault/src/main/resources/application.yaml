@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/sentinel_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: ${DB_PASSWORD}  # Reminds you to set this Env Variable too
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   # JPA Configuration
@@ -25,20 +25,27 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
 
-  # --- NEW: EMAIL CONFIGURATION (Indented under 'spring') ---
+  # --- EMAIL CONFIGURATION (Updated for Render/Cloud) ---
   mail:
     host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}  # Reads from Env Variable
-    password: ${MAIL_PASSWORD}  # Reads from Env Variable
+    port: 465                 # Changed to SSL Port (Fixes Timeout)
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    protocol: smtps           # Changed to secure SMTP
     properties:
       mail:
         smtp:
           auth: true
+          ssl:
+            enable: true      # Forces SSL connection immediately
+            trust: smtp.gmail.com
           starttls:
-            enable: true
+            enable: false     # Disable StartTLS because we are using SSL
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
-# --- NEW: FRONTEND URL (Root level, same indentation as 'spring') ---
+# --- FRONTEND URL ---
 app:
   frontend:
-    url: ${FRONTEND_URL}  # Reads from Env Variable
+    url: ${FRONTEND_URL}
