@@ -1,4 +1,5 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'; // 1. Import HashRouter
+// 1. Change back to BrowserRouter
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'; 
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -8,21 +9,18 @@ import ResetPassword from './pages/ResetPassword';
 
 function App() {
   return (
-    // 2. Use HashRouter instead of Router/BrowserRouter
-    <HashRouter>
+    // 2. Use BrowserRouter
+    <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/decrypt" element={<DecryptPage />} />
-        
-        {/* Password Reset Routes */}
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 

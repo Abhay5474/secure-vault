@@ -70,7 +70,7 @@ public class UserService {
         userRepository.save(user);
 
         // Send Email
-        String resetLink = frontendUrl + "/#/reset-password?token=" + token;
+        String resetLink = frontendUrl + "/reset-password?token=" + token;
 
         SimpleMailMessage message = new SimpleMailMessage();
 
