@@ -29,38 +29,50 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String requestPath = request.getRequestURI();
+
+        // --- 1. CRITICAL CORS FIX: SKIP "OPTIONS" REQUESTS ---
+        // Browsers send a "Preflight" OPTIONS request before the real POST/GET.
+        // We must let this pass immediately without checking for a token.
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            filterChain.doFilter(request, response);
+            return;
+        }
+        // -----------------------------------------------------
+
         // --- DEBUG LOGS ---
         String authHeader = request.getHeader("Authorization");
-        System.out.println("🕵️ FILTER: Request to " + request.getRequestURI());
-        System.out.println("   > Header: " + authHeader);
+        System.out.println("🕵️ FILTER: Request to " + requestPath);
         // ------------------
 
-        // 1. Get the Authorization Header
-//        String authHeader = request.getHeader("Authorization");
-        System.out.println("1. Header received: " + authHeader);
         String token = null;
         String username = null;
 
-        // 2. Check if it starts with "Bearer "
+        // 2. Check header and extract Token
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7); // Remove "Bearer " prefix
-            username = jwtUtil.extractUsername(token);
-            System.out.println("2. Token extracted. Username: " + username);
-        }
-        else {
-            System.out.println("2. Header is missing 'Bearer ' prefix!");
+            try {
+                username = jwtUtil.extractUsername(token);
+            } catch (Exception e) {
+                // If token is expired or garbage, just log it and continue.
+                System.out.println("❌ Token extraction failed: " + e.getMessage());
+            }
+        } else {
+            System.out.println("ℹ️ No Bearer token found (Normal for public pages)");
         }
 
         // 3. If we have a username and they are NOT already logged in
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             // 4. Load the user details from DB
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
             // 5. Validate the token
+            // ✅ FIXED LINE BELOW: using .getUsername()
             if (jwtUtil.validateToken(token, userDetails.getUsername())) {
 
-                // 6. Create the Authentication Object (The "Stamped Passport")
+                // 6. Create the Authentication Object
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
 
