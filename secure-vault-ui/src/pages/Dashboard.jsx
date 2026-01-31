@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import { Shield, FileText, LogOut, Upload, Share2, Eye, Lock, Trash2, Film, Music } from 'lucide-react'; // 🟢 Added Music Icon
 import UploadModal from './UploadModal';
@@ -47,7 +47,7 @@ const Dashboard = () => {
 
     try {
       // Fetch only files owned by the user
-      const response = await axios.get('http://localhost:8080/api/files', {
+      const response = await api.get('/api/files', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFiles(response.data);
@@ -70,7 +70,7 @@ const Dashboard = () => {
   const handleView = async (fileId, fileName) => {
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.get(`http://localhost:8080/api/files/download/${fileId}`, {
+      const response = await api.get(`/api/files/download/${fileId}`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob' 
       });
@@ -103,7 +103,7 @@ const Dashboard = () => {
   const handleDownloadSntl = async (fileId, fileName) => {
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.get(`http://localhost:8080/api/files/download-sntl/${fileId}`, {
+      const response = await api.get(`/api/files/download-sntl/${fileId}`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob' 
       });
@@ -137,7 +137,7 @@ const Dashboard = () => {
 
     const token = localStorage.getItem('token');
     try {
-      await axios.delete(`http://localhost:8080/api/files/delete/${fileId}`, {
+      await api.delete(`/api/files/delete/${fileId}`, {
          headers: { Authorization: `Bearer ${token}` }
       });
 

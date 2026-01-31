@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { X, UserPlus, Users, Trash2, AlertCircle } from 'lucide-react';
 
 const ShareModal = ({ isOpen, onClose, fileId, fileName }) => {
@@ -18,7 +18,7 @@ const ShareModal = ({ isOpen, onClose, fileId, fileName }) => {
   const fetchShares = async () => {
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.get(`http://localhost:8080/api/files/shares/${fileId}`, {
+      const response = await api.get(`/api/files/shares/${fileId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSharedUsers(response.data);
@@ -31,7 +31,7 @@ const ShareModal = ({ isOpen, onClose, fileId, fileName }) => {
 
     const token = localStorage.getItem('token');
     try {
-      await axios.delete(`http://localhost:8080/api/files/revoke`, {
+      await api.delete(`/api/files/revoke`, {
         headers: { Authorization: `Bearer ${token}` },
         params: { fileId, email: targetEmail }
       });
@@ -49,7 +49,7 @@ const ShareModal = ({ isOpen, onClose, fileId, fileName }) => {
 
     const token = localStorage.getItem('token');
     try {
-      await axios.post(`http://localhost:8080/api/files/share`, null, {
+      await api.post(`/api/files/share`, null, {
         params: { fileId, email: email },
         headers: { Authorization: `Bearer ${token}` }
       });

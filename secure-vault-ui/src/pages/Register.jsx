@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { Shield, UserPlus, Lock, Mail } from 'lucide-react';
 
@@ -22,7 +22,7 @@ const Register = () => {
     try {
       // Assuming your backend has this endpoint. 
       // If not, use Login page for now.
-      await axios.post('http://localhost:8080/api/auth/register', {
+      await api.post('/api/auth/register', {
         email,
         password
       });

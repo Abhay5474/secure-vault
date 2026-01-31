@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { Shield, Lock, FileKey, ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SecurePDFViewer from './SecurePDFViewer';
@@ -54,7 +54,7 @@ const DecryptPage = () => {
     setLoading(true); 
     
     try {
-      const response = await axios.get(`http://localhost:8080/api/files/download/${fileId}`, {
+      const response = await api.get(`/api/files/download/${fileId}`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob' 
       });

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { X, UploadCloud, Loader2 } from 'lucide-react';
 
 const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
@@ -22,7 +22,7 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
     const token = localStorage.getItem('token');
 
     try {
-      await axios.post('http://localhost:8080/api/files/upload', formData, {
+      await api.post('/api/files/upload', formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'

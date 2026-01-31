@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,7 +17,7 @@ const ForgotPassword = () => {
     setError('');
 
     try {
-      await axios.post(`http://localhost:8080/api/auth/forgot-password`, null, {
+      await api.post(`/api/auth/forgot-password`, null, {
         params: { email }
       });
       setMessage("Link sent! Check your inbox.");
