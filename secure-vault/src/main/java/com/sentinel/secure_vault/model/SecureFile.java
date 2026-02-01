@@ -17,18 +17,20 @@ public class SecureFile {
     @Column(nullable = false)
     private String fileName;
 
-    // The file type (e.g., "application/pdf") - Important for the browser to render it later
+    // The file type (e.g., "application/pdf")
     @Column(nullable = false)
     private String fileType;
 
-    // The path where the encrypted bytes are saved on your laptop
-    // Example: "uploads/a1b2-c3d4-e5f6.sntl"
-    @Column(nullable = false, unique = true)
-    private String storagePath;
+    // ❌ REMOVED: private String storagePath;
+    // (We don't trust the disk anymore)
+
+    // ✅ NEW: Store the actual encrypted file bytes inside the database
+    // "LONGBLOB" allows storing large files (up to 4GB in MySQL/TiDB)
+    @Lob
+    @Column(name = "file_data", columnDefinition = "LONGBLOB")
+    private byte[] fileData;
 
     // ⚠️ THE KEY: Stored as a Base64 String.
-    // In a real startup, we would encrypt this column too (Key Wrapping),
-    // but for this project, storing it here allows us to decrypt the file when requested.
     @Column(nullable = false, length = 512)
     private String encryptedKey;
 

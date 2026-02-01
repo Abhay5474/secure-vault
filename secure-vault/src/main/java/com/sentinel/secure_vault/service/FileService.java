@@ -6,30 +6,23 @@ import com.sentinel.secure_vault.model.User;
 import com.sentinel.secure_vault.repository.FileRepository;
 import com.sentinel.secure_vault.repository.FileShareRepository;
 import com.sentinel.secure_vault.repository.UserRepository;
-import com.sentinel.secure_vault.util.AESUtil; // ✅ Added Import
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class FileService {
 
-    private final String UPLOAD_DIR = "secure_uploads/";
+    // ❌ REMOVED: private final String UPLOAD_DIR... (Not needed for DB storage)
 
     @Autowired
     private FileRepository fileRepository;
-
 
     @Autowired
     private UserRepository userRepository;
@@ -40,21 +33,12 @@ public class FileService {
     @Autowired
     private EncryptionService encryptionService;
 
-    // 1. STORE FILE (Owner Creates .sntl)
+    // 1. STORE FILE (Owner Creates .sntl -> Saved to DB)
     public String storeFile(MultipartFile file, String ownerEmail) throws Exception {
-        File directory = new File(UPLOAD_DIR);
-        if (!directory.exists()) directory.mkdirs();
 
-        String uniqueFileName = UUID.randomUUID().toString() + ".sntl";
-        String filePath = UPLOAD_DIR + uniqueFileName;
-
-        // Generate Key & Encrypt
+        // Generate Key & Encrypt the raw bytes
         SecretKey key = encryptionService.generateKey();
         byte[] encryptedData = encryptionService.encrypt(file.getBytes(), key);
-
-        try (FileOutputStream fos = new FileOutputStream(filePath)) {
-            fos.write(encryptedData);
-        }
 
         User owner = userRepository.findByEmail(ownerEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -62,19 +46,18 @@ public class FileService {
         SecureFile secureFile = new SecureFile();
         secureFile.setFileName(file.getOriginalFilename());
         secureFile.setFileType(file.getContentType());
-        secureFile.setStoragePath(filePath);
         secureFile.setOwner(owner);
         secureFile.setEncryptedKey(encryptionService.encodeKey(key));
 
+        // ✅ NEW: Save encrypted bytes DIRECTLY into the Database
+        // This prevents files from being deleted when Render restarts.
+        secureFile.setFileData(encryptedData);
+
         fileRepository.save(secureFile);
-        return "File encrypted and stored. ID: " + secureFile.getId();
+        return "File encrypted and stored in Database. ID: " + secureFile.getId();
     }
 
-
-
-    // ... (rest of the code) ...
-
-    // 3. DOWNLOAD / STREAM FILE (For Viewer)
+    // 3. DOWNLOAD / STREAM FILE (Decrypts from DB)
     public byte[] downloadFile(Long fileId, String requesterEmail) throws Exception {
         // 1. Find the file
         SecureFile file = fileRepository.findById(fileId)
@@ -89,20 +72,14 @@ public class FileService {
             throw new RuntimeException("ACCESS DENIED: The owner has not granted you permission.");
         }
 
-        // 3. Read Encrypted Bytes from Disk
-        File fileOnDisk = new File(file.getStoragePath());
-        if (!fileOnDisk.exists()) {
-            fileOnDisk = new File(System.getProperty("user.dir"), file.getStoragePath());
+        // 3. Read Encrypted Bytes from Database Entity (Not Disk)
+        byte[] encryptedContent = file.getFileData();
+
+        if (encryptedContent == null || encryptedContent.length == 0) {
+            throw new RuntimeException("File content is empty or corrupted in database.");
         }
 
-        if (!fileOnDisk.exists()) {
-            throw new RuntimeException("Encrypted file not found on server disk.");
-        }
-
-        byte[] encryptedContent = Files.readAllBytes(fileOnDisk.toPath());
-
-        // 4. FIX: Use EncryptionService (NOT AESUtil)
-        // This ensures the Math used to lock the file is the same Math used to unlock it.
+        // 4. Decrypt using the stored key
         return encryptionService.decrypt(encryptedContent, file.getEncryptedKey());
     }
 
@@ -121,7 +98,7 @@ public class FileService {
                 .collect(Collectors.toList());
     }
 
-    // SHARE FILE (Updated for Robustness)
+    // SHARE FILE
     public String shareFile(Long fileId, String ownerEmail, String shareWithEmail) {
         // Normalize email to lowercase to prevent mismatch
         String targetEmail = shareWithEmail.toLowerCase().trim();
@@ -154,10 +131,11 @@ public class FileService {
 
     // 4. LIST FILES (OWNER ONLY - Hides Shared Files)
     public List<SecureFile> getAllFiles(String email) {
+        // Note: The fileData BLOB is lazy loaded usually, so this list won't crash your memory
         return fileRepository.findByOwner_Email(email);
     }
 
-    // 5. DOWNLOAD .SNTL (Raw Encrypted)
+    // 5. DOWNLOAD .SNTL (Raw Encrypted from DB)
     public byte[] downloadEncryptedSntl(Long fileId, String requesterEmail) throws Exception {
         SecureFile fileEntity = fileRepository.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
@@ -170,13 +148,8 @@ public class FileService {
             throw new RuntimeException("ACCESS DENIED");
         }
 
-        File fileOnDisk = new File(fileEntity.getStoragePath());
-        if (!fileOnDisk.exists()) {
-            fileOnDisk = new File(System.getProperty("user.dir"), fileEntity.getStoragePath());
-            if (!fileOnDisk.exists()) throw new RuntimeException("File missing on disk");
-        }
-
-        return Files.readAllBytes(fileOnDisk.toPath());
+        // Return raw encrypted bytes from DB
+        return fileEntity.getFileData();
     }
 
     public String getContentType(Long fileId) {
@@ -186,11 +159,9 @@ public class FileService {
     public String getOriginalFileName(Long fileId) {
         return fileRepository.findById(fileId).map(SecureFile::getFileName).orElse("unknown");
     }
-    // ... existing code ...
 
     // 7. REVOKE ACCESS (Owner Only)
-    // @Transactional is required for delete operations
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public String revokeAccess(Long fileId, String ownerEmail, String targetEmail) {
         SecureFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
@@ -206,7 +177,7 @@ public class FileService {
     }
 
     // 8. PERMANENT DELETE (Owner Only)
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public String deleteFile(Long fileId, String ownerEmail) {
         SecureFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
@@ -218,21 +189,11 @@ public class FileService {
 
         try {
             // STEP 1: Delete all permission records (Shares) first
-            // This prevents "Foreign Key Constraint" errors in the database
             List<FileShare> shares = fileShareRepository.findByFile_Id(fileId);
             fileShareRepository.deleteAll(shares);
 
-            // STEP 2: Delete the physical file from the "secure_uploads" folder
-            File fileOnDisk = new File(file.getStoragePath());
-            if (fileOnDisk.exists()) {
-                if (fileOnDisk.delete()) {
-                    System.out.println("✅ Physical file deleted: " + file.getFileName());
-                } else {
-                    System.err.println("⚠️ Warning: Could not delete physical file (might be open or missing).");
-                }
-            }
-
-            // STEP 3: Delete the File Record from Database
+            // STEP 2: Delete from Database (This also deletes the BLOB data)
+            // ❌ Removed disk deletion logic since file is now inside the DB row
             fileRepository.delete(file);
 
             return "File deleted successfully.";

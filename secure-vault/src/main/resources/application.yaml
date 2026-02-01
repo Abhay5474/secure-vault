@@ -2,50 +2,54 @@ spring:
   application:
     name: secure-vault
 
-  # Database Configuration
+  # --- DATABASE CONFIGURATION ---
   datasource:
+    # Note: Ensure this URL points to your Render TiDB URL when deploying!
     url: jdbc:mysql://localhost:3306/sentinel_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-  # JPA Configuration
+  # --- JPA / HIBERNATE CONFIGURATION ---
   jpa:
     hibernate:
-      ddl-auto: update
+      # 'update' will automatically create the new 'file_data' BLOB column
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+        # TiDB is compatible with MySQL 5.7+ dialects
         dialect: org.hibernate.dialect.MySQLDialect
 
-  # File Upload Limits
+  # --- FILE UPLOAD LIMITS ---
   servlet:
     multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
+      # We increased this to ensure slightly larger files don't crash the upload
+      max-file-size: 50MB
+      max-request-size: 50MB
 
-  # --- EMAIL CONFIGURATION (Switched to Brevo for Render Port 2525) ---
+  # --- EMAIL CONFIGURATION (Brevo SMTP) ---
   mail:
     host: smtp-relay.brevo.com
     port: 2525                # Render keeps this port open!
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
-    protocol: smtp            # Standard SMTP (upgrades via STARTTLS)
+    protocol: smtp            # Standard SMTP
     properties:
       mail:
         smtp:
           auth: true
           starttls:
-            enable: true      # Required for Port 587/2525
+            enable: true      # Required for Port 2525
             required: true
           ssl:
-            enable: false     # Disable implicit SSL (we use STARTTLS instead)
+            enable: false     # Disable implicit SSL (use STARTTLS)
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
 
-# --- FRONTEND URL ---
+# --- CUSTOM APP VARIABLES ---
 app:
   frontend:
     url: ${FRONTEND_URL}
