@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-**Secure Vault** is a secure file storage and sharing platform designed to solve the critical flaw in traditional cloud storage services (like Google Drive or Dropbox): **Loss of Control**.
+**Secure Vault** is a secure file storage and sharing platform designed to solve the critical flaw in traditional cloud storage services : **Loss of Control**.
 
 In traditional systems, once a file is downloaded, the owner loses all control over who views or shares it. Secure Vault introduces a **"Remote Control"** paradigm using a proprietary encrypted file format (`.sntl`). Files downloaded from the platform remain encrypted at rest and require real-time server authentication to decrypt, ensuring that access can be **revoked instantly**, even after the file has left the cloud.
 
